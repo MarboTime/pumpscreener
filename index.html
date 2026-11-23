@@ -1,0 +1,148 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PumpScreener</title>
+<style>
+:root{--bg:#0b0e14;--c:#151a24;--c2:#1d2430;--t:#e6e9ef;--m:#8b93a5;--g:#16c784;--r:#ea3943;--y:#9aa0ab;--o:#f5a524}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font:13px system-ui,sans-serif}
+header{display:flex;gap:8px;align-items:center;padding:8px 12px;background:var(--c);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+h1{font-size:16px;margin:0;color:var(--g)}button,select,input,textarea{background:var(--c2);color:var(--t);border:1px solid #2b3445;border-radius:6px;padding:6px 8px;font:inherit}
+button{cursor:pointer}button.on{background:var(--g);color:#000;border-color:var(--g)}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;padding:8px 12px}
+.f{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 8px}.f input{width:92px}.f label{color:var(--m);display:flex;align-items:center;gap:4px}
+.sim{margin:0 12px 8px;padding:8px;background:var(--c);border-radius:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}.sim input{width:80px}
+#list{padding:0 12px 40px;display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
+.card{background:var(--c);border-radius:10px;overflow:hidden;cursor:pointer;border:1px solid #232b3a}.card:hover{border-color:#3a475e}
+.ban{height:46px;background:#222 center/cover}.in{padding:8px;display:grid;grid-template-columns:44px 1fr auto;gap:8px}
+.lg{width:44px;height:44px;border-radius:8px;background:#2a3140 center/cover}.nm{font-weight:700}.sub{color:var(--m);font-size:11px}
+.pill{font-size:10px;padding:1px 6px;border-radius:9px;background:#2a3140;margin-right:3px;display:inline-block}
+.sig{width:20px;height:20px;border-radius:50%;display:inline-block;vertical-align:middle}
+.sg{background:var(--g);box-shadow:0 0 8px var(--g)}.sy{background:var(--y)}.sr{background:var(--r);animation:b .7s infinite}
+@keyframes b{50%{opacity:.15}}.ex{color:var(--o);font-weight:900;font-size:16px;margin-left:3px}
+.st{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:0 8px 8px;font-size:11px}.st b{display:block;font-size:12px}
+.pb{height:5px;background:#2a3140;margin:0 8px 8px;border-radius:3px}.pb i{display:block;height:100%;background:var(--g);border-radius:3px}
+.g{color:var(--g)}.r{color:var(--r)}.o{color:var(--o)}
+#md{position:fixed;inset:0;background:#000b;display:none;overflow:auto;z-index:9}#md>div{max-width:760px;margin:20px auto;background:var(--c);border-radius:12px;padding:14px}
+.ig{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin:10px 0}.ig div{background:var(--c2);padding:6px 8px;border-radius:6px}.ig small{color:var(--m);display:block;font-size:10px}
+canvas{width:100%;background:#0f131b;border-radius:8px}.note{color:var(--m);font-size:11px}
+</style></head><body>
+<header><h1>🚀 PumpScreener</h1><span class="note" id="stt"></span><span style="flex:1"></span>
+<button onclick="load()">⟳</button><button id="lb" onclick="setL()"></button></header>
+<div class="tabs" id="tabs"></div><div class="sim" id="sim"></div><div class="f" id="flt"></div><div id="list"></div>
+<div id="md" onclick="if(event.target==this)this.style.display='none'"><div id="mdc"></div></div>
+<script>
+const T={new:['Pair Baru','New Pair'],almost:['Hampir Bond','Almost Bond'],mig:['Migrated','Migrated'],trend:['Trending','Trending'],sm:['Smart Money / KOL / Whale','Smart Money / KOL / Whale'],news:['Berita Sosmed','Social News'],
+mc:['MC min','MC min'],mc2:['MC maks','MC max'],liq:['Likuiditas min','Liq min'],vol:['Vol 24j min','Vol 24h min'],age:['Umur maks (mnt)','Max age (min)'],tx:['Min Tx 1j','Min Tx 1h'],buy:['Buy% min','Buy% min'],prog:['Bond% min','Bond% min'],
+hide:['Sembunyikan merah','Hide red'],paid:['Dex Paid saja','Dex Paid only'],q:['Cari nama/CA','Search name/CA'],sort:['Urut','Sort'],
+sim:['SIMULASI PROFIT','PROFIT SIMULATOR'],pos:['Posisi $','Position $'],mcin:['MC masuk','Entry MC'],tp:['Target profit $','Target profit $'],
+fee:['* belum termasuk fee buy/sell','* excludes buy/sell fees'],tgt:['MC target','Target MC'],
+long:['JANGKA PANJANG','LONG TERM'],scalp:['SCALPING','SCALPING'],bull:['Bullish','Bullish'],bear:['Bearish','Bearish'],
+dev:['Developer','Developer'],made:['Koin dibuat','Coins made'],dead:['Mati/Rug','Dead/Rug'],ok:['Berhasil','Success'],rugp:['Rug dev %','Dev rug %'],
+top10:['Top 10 Holder','Top 10 Holder'],bund:['Bundler (est)','Bundler (est)'],snip:['Sniper (est)','Sniper (est)'],ins:['Insider (est)','Insider (est)'],phi:['Phishing','Phishing'],
+copy:['TOKEN TIRUAN','COPYCAT TOKEN'],manip:['Chart dimanipulasi?','Chart manipulated?'],risk:['Risiko Rug %','Rug Risk %'],buys:['Beli','Buys'],sells:['Jual','Sells'],
+gfee:['Fee global (est)','Global fee (est)'],paidl:['Dex','Dex'],liql:['Likuid','Liq'],voll:['Vol','Vol'],mcl:['MC','MC'],mgl:['Menuju migrasi','To migrate'],
+wl:['Daftar wallet (label,alamat — satu per baris. Awali label dengan SM:, KOL:, WHALE:)','Wallet list (label,address — one per line. Prefix label SM:, KOL:, WHALE:)'],scan:['Scan koin yang dipegang','Scan held coins'],
+loading:['Memuat...','Loading...'],legend:['Legenda chart: D=Dev, W=Whale/trader besar, S=Smart money','Chart legend: D=Dev, W=Big trader, S=Smart money'],
+nw:['Koin dengan Twitter/Telegram aktif & boost terbanyak (proxy trending sosmed)','Coins with active Twitter/Telegram & most boosts (social trending proxy)']};
+let lang=localStorage.lang||'id',tab='new',coins=[],F=JSON.parse(localStorage.F||'{"age":720,"hide":false}');
+const $=s=>document.querySelector(s),t=k=>(T[k]||[k,k])[lang=='id'?0:1];
+const fm=n=>n==null||isNaN(n)?'-':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':(+n).toFixed(0);
+const pn=s=>{s=String(s||'').toLowerCase().replace(/[$,\s]/g,'');let m=s.endsWith('k')?1e3:s.endsWith('m')?1e6:1;return parseFloat(s)*m};
+const sh=a=>a?a.slice(0,4)+'…'+a.slice(-4):'-';
+async function j(u,o){try{const r=await fetch(u,o);return r.ok?await r.json():null}catch(e){return null}}
+async function rpc(m,p){const r=await j('https://api.mainnet-beta.solana.com',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p})});return r&&r.result}
+function setL(){lang=lang=='id'?'en':'id';localStorage.lang=lang;ui()}
+function ui(){$('#lb').textContent=lang=='id'?'🇮🇩 ID → EN':'🇬🇧 EN → ID';
+ $('#tabs').innerHTML=['new','almost','mig','trend','sm','news'].map(k=>`<button class="${tab==k?'on':''}" onclick="tab='${k}';ui()">${t(k)}</button>`).join('');
+ const fl=['mc','mc2','liq','vol','age','tx','buy','prog'].map(k=>`<label>${t(k)}<input id="f_${k}" value="${F[k]??''}" onchange="sf()"></label>`).join('')+
+ `<label><input type="checkbox" id="f_hide" ${F.hide?'checked':''} onchange="sf()">${t('hide')}</label><label><input type="checkbox" id="f_paid" ${F.paid?'checked':''} onchange="sf()">${t('paid')}</label>
+ <input id="f_q" style="width:150px" placeholder="${t('q')}" value="${F.q||''}" onchange="sf()"><select id="f_sort" onchange="sf()">${[['age','Terbaru/Newest'],['mc','MC'],['vol','Volume'],['score','Score'],['prog','Bond%']].map(o=>`<option value="${o[0]}" ${F.sort==o[0]?'selected':''}>${t('sort')}: ${o[1]}</option>`).join('')}</select>`;
+ $('#flt').innerHTML=(tab=='sm'||tab=='news')?'':fl;
+ $('#sim').innerHTML=`<b>${t('sim')}</b> ${t('pos')}<input id="s1" value="2" oninput="sim()"> ${t('mcin')}<input id="s2" value="10k" oninput="sim()"> ${t('tp')}<input id="s3" value="20" oninput="sim()"> <span id="so"></span>`;sim();render()}
+function sim(){const p=pn($('#s1').value),m=pn($('#s2').value),g=pn($('#s3').value);if(!(p>0&&m>0&&g>=0))return $('#so').textContent='';
+ const tm=m*(p+g)/p;$('#so').innerHTML=`POSITION: $${p} | MC: ${fm(m)} | PROFIT: $${g} → <b class="g">${t('tgt')}: $${fm(tm)} (${((p+g)/p).toFixed(2)}x)</b> <span class="note">${t('fee')}</span>`}
+function sf(){['mc','mc2','liq','vol','age','tx','buy','prog','q'].forEach(k=>F[k]=$('#f_'+k).value);F.hide=$('#f_hide').checked;F.paid=$('#f_paid').checked;F.sort=$('#f_sort').value;localStorage.F=JSON.stringify(F);render()}
+
+async function load(){$('#stt').textContent=t('loading');
+ const [p,b,b2,s1,s2]=await Promise.all(['token-profiles/latest/v1','token-boosts/latest/v1','token-boosts/top/v1'].map(x=>j('https://api.dexscreener.com/'+x)).concat(['pump','pumpswap'].map(q=>j('https://api.dexscreener.com/latest/dex/search?q='+q))));
+ const ad=new Set(),bo={};[p,b,b2].forEach(a=>(a||[]).forEach(x=>{if(x.chainId=='solana'){ad.add(x.tokenAddress);if(x.totalAmount)bo[x.tokenAddress]=Math.max(bo[x.tokenAddress]||0,x.totalAmount)}}));
+ let pr=[...(s1?.pairs||[]),...(s2?.pairs||[])];const ar=[...ad];
+ const bt=[];for(let i=0;i<ar.length;i+=30)bt.push(j('https://api.dexscreener.com/tokens/v1/solana/'+ar.slice(i,i+30).join(',')));
+ (await Promise.all(bt)).forEach(x=>x&&(pr=pr.concat(x)));
+ const mp={};pr.filter(x=>x.chainId=='solana'&&x.baseToken.address.endsWith('pump')).forEach(x=>{const k=x.baseToken.address;if(!mp[k]||(x.liquidity?.usd||0)>(mp[k].liquidity?.usd||0))mp[k]=x});
+ const all=Object.values(mp);coins=all.map(x=>an(x,all,bo[x.baseToken.address]||0));$('#stt').textContent=new Date().toLocaleTimeString()+' · '+coins.length;render()}
+
+function an(p,all,boost,ex){ex=ex||{};const m=p.marketCap||p.fdv||0,liq=p.liquidity?.usd||0,tx=p.txns||{},h1=tx.h1||{buys:0,sells:0},h24=tx.h24||{buys:0,sells:0},pc=p.priceChange||{},v24=p.volume?.h24||0;
+ const age=(Date.now()-p.pairCreatedAt)/6e4,mig=p.dexId!='pumpfun',prog=mig?100:Math.min(99,m/69000*100),ratio=h1.buys/((h1.buys+h1.sells)||1);
+ const soc=p.info?.socials||[],web=p.info?.websites||[],paid=ex.paid!=null?ex.paid:!!(p.info?.imageUrl&&(soc.length||web.length));
+ const nm=(p.baseToken.name+' '+p.baseToken.symbol).toLowerCase();
+ const phish=/airdrop|claim|giveaway|reward|official.?token|verify/.test(nm)||web.some(w=>!/^https:\/\//.test(w.url))||ex.phish;
+ const copy=all.some(o=>o!==p&&o.baseToken.symbol.toLowerCase()==p.baseToken.symbol.toLowerCase()&&o.pairCreatedAt<p.pairCreatedAt&&(o.marketCap||0)>m*1.5);
+ const manip=(h1.buys+h1.sells>200&&Math.abs(ratio-.5)<.03&&Math.abs(pc.h1||0)<3)||(pc.m5>150&&pc.h1>300)||(liq>0&&v24/liq>50);
+ let sc=50;if(ratio>.55)sc+=10;if(ratio<.4)sc-=15;if(v24/(m||1)>.3)sc+=5;if(liq/(m||1)<.05)sc-=10;sc+=paid?5:-10;if(age<5)sc-=10;if(pc.h1<-50)sc-=25;if(pc.m5<-20)sc-=15;
+ if(copy)sc-=30;if(phish)sc-=25;if(manip)sc-=15;if(boost)sc+=5;
+ if(ex.top10>50)sc-=20;else if(ex.top10>30)sc-=8;if(ex.bund>20)sc-=15;
+ if(ex.dev&&ex.dev.n>=3){if(ex.dev.dead/ex.dev.n>.6)sc-=25;if(ex.dev.ok>0)sc+=10}
+ sc=Math.max(0,Math.min(100,sc));const bull=Math.round(Math.max(5,Math.min(95,50+(pc.m5||0)*.5+(pc.h1||0)*.2+(ratio-.5)*100)));
+ return{p,a:p.baseToken.address,m,liq,v24,h1,h24,age,mig,prog,ratio,paid,phish,copy,manip,sc,bull,boost,soc,web,pc,
+  lt:mig&&age>1440&&liq>5e4,sig:(sc<40||copy)?'sr':sc>=70&&!manip?'sg':'sy',ex}}
+function flt(l){const n=k=>F[k]===''||F[k]==null?null:pn(F[k]);const q=(F.q||'').toLowerCase();
+ let r=l.filter(c=>{const s=(x,k,f)=>n(k)==null||f(x,n(k));return s(c.m,'mc',(a,b)=>a>=b)&&s(c.m,'mc2',(a,b)=>a<=b)&&s(c.liq,'liq',(a,b)=>a>=b)&&s(c.v24,'vol',(a,b)=>a>=b)&&s(c.age,'age',(a,b)=>a<=b)&&
+  s(c.h1.buys+c.h1.sells,'tx',(a,b)=>a>=b)&&s(c.ratio*100,'buy',(a,b)=>a>=b)&&s(c.prog,'prog',(a,b)=>a>=b)&&!(F.hide&&c.sig=='sr')&&!(F.paid&&!c.paid)&&
+  (!q||(c.p.baseToken.name+c.p.baseToken.symbol+c.a).toLowerCase().includes(q))});
+ const so=F.sort||'age';r.sort((a,b)=>so=='age'?a.age-b.age:so=='mc'?b.m-a.m:so=='vol'?b.v24-a.v24:so=='score'?b.sc-a.sc:b.prog-a.prog);return r}
+function render(){const L=$('#list');if(tab=='sm')return smTab();if(tab=='news')return newsTab();
+ let l=coins.filter(c=>tab=='new'?!c.mig:tab=='almost'?!c.mig&&c.prog>=60:tab=='mig'?c.mig:true);
+ if(tab=='trend'){l=l.filter(c=>c.boost||c.h1.buys+c.h1.sells>100).sort((a,b)=>(b.boost-a.boost)||(b.p.volume?.h1-a.p.volume?.h1))}
+ l=flt(l);if(tab=='trend'&&!F.sort)l=l;L.innerHTML=l.map(card).join('')||'<p class="note">—</p>'}
+function card(c){const p=c.p,i=p.info||{};return`<div class="card" onclick="det('${c.a}')">${i.header?`<div class="ban" style="background-image:url('${i.header}')"></div>`:''}
+<div class="in"><div class="lg" style="background-image:url('${i.imageUrl||''}')"></div><div><div class="nm">${esc(p.baseToken.symbol)} <span class="sub">${esc(p.baseToken.name)}</span></div>
+<div><span class="pill">${c.lt?t('long'):t('scalp')}</span></div><div class="sub"><span class="g">${t('bull')} ${c.bull}%</span> / <span class="r">${t('bear')} ${100-c.bull}%</span></div>
+<div>${c.paid?'<span class="pill g">Dex Paid</span>':'<span class="pill">Unpaid</span>'}${c.copy?`<span class="pill r">⚠ ${t('copy')}</span>`:''}${c.phish?`<span class="pill r">${t('phi')}</span>`:''}</div></div>
+<div style="text-align:right"><span class="sig ${c.sig}"></span>${c.manip?'<span class="ex">!</span>':''}<div class="sub">${c.sc}/100</div><div class="sub">${fa(c.age)}</div></div></div>
+<div class="st"><div class="sub">${t('mcl')}<b>$${fm(c.m)}</b></div><div class="sub">${t('liql')}<b>$${fm(c.liq)}</b></div><div class="sub">${t('voll')}<b>$${fm(c.v24)}</b></div><div class="sub">${t('buys')}/${t('sells')}<b><span class="g">${c.h1.buys}</span>/<span class="r">${c.h1.sells}</span></b></div></div>
+<div class="sub" style="padding:0 8px">${t('mgl')} ${c.prog.toFixed(0)}%</div><div class="pb"><i style="width:${c.prog}%"></i></div></div>`}
+const esc=s=>String(s).replace(/[<>&"']/g,c=>'&#'+c.charCodeAt(0)+';'),fa=m=>m<60?m.toFixed(0)+'m':m<1440?(m/60).toFixed(1)+'h':(m/1440).toFixed(1)+'d';
+
+async function det(a){const c=coins.find(x=>x.a==a),p=c.p,M=$('#md');M.style.display='block';const W=$('#mdc');W.innerHTML='<p>'+t('loading')+'</p>';
+ const pa=p.pairAddress,[cj,la,sp,ord,oh,trd]=await Promise.all([j('https://frontend-api-v3.pump.fun/coins/'+a),rpc('getTokenLargestAccounts',[a]),rpc('getTokenSupply',[a]),j('https://api.dexscreener.com/orders/v1/solana/'+a),
+  j(`https://api.geckoterminal.com/api/v2/networks/solana/pools/${pa}/ohlcv/minute?aggregate=1&limit=120`),j(`https://api.geckoterminal.com/api/v2/networks/solana/pools/${pa}/trades`)]);
+ const cr=cj?.creator;let dev=null;if(cr){const l=await j(`https://frontend-api-v3.pump.fun/coins/user-created-coins/${cr}?offset=0&limit=50&includeNsfw=true`);
+  if(Array.isArray(l)&&l.length){dev={n:l.length,ok:l.filter(x=>x.complete).length,dead:l.filter(x=>!x.complete&&(x.usd_market_cap||0)<4000).length}}}
+ let top10=null,bund=null,ins=null;if(la?.value&&sp?.value){const tot=+sp.value.uiAmount,ar=la.value.map(x=>+x.uiAmount).slice(1);top10=ar.slice(0,10).reduce((s,x)=>s+x,0)/tot*100;
+  const cl=new Set();ar.slice(0,19).forEach((x,i)=>ar.slice(i+1,19).forEach((y,k)=>{if(Math.abs(x-y)/x<.01){cl.add(i);cl.add(i+1+k)}}));bund=[...cl].reduce((s,i)=>s+ar[i],0)/tot*100;ins=ar.filter(x=>x/tot>.02).reduce((s,x)=>s+x,0)/tot*100}
+ const paid=Array.isArray(ord)?ord.some(o=>o.status=='approved'):c.paid;
+ const tr=(trd?.data||[]).map(x=>x.attributes).reverse(),wl=wallets();let sn=null;
+ if(tr.length&&tr.length<300){const t0=+new Date(tr[0].block_timestamp);sn=new Set(tr.filter(x=>x.kind=='buy'&&new Date(x.block_timestamp)-t0<=1e4).map(x=>x.tx_from_address)).size}
+ const mk=tr.filter(x=>+x.volume_in_usd>=400||x.tx_from_address==cr||wl[x.tx_from_address]).map(x=>({ts:Date.parse(x.block_timestamp)/1e3,k:x.kind,ty:x.tx_from_address==cr?'D':wl[x.tx_from_address]?'S':'W'}));
+ const cd=(oh?.data?.attributes?.ohlcv_list||[]).slice().reverse();
+ const n=an(p,coins.map(x=>x.p),c.boost,{top10,bund,dev,paid,phish:c.phish});Object.assign(c,n);
+ const ra=Math.round(100-n.sc),fee=n.mig?.25:1,gfee=n.v24*fee/100;
+ const I=(k,v,cl)=>`<div><small>${k}</small><b class="${cl||''}">${v}</b></div>`,pc=(v,w,b)=>v==null?'':v>b?'r':v>w?'o':'g';
+ const soc=[...n.soc.map(s=>`<a href="${esc(s.url)}" target="_blank" style="color:var(--g)">${esc(s.type)}</a>`),...n.web.map(s=>`<a href="${esc(s.url)}" target="_blank" style="color:var(--g)">web</a>`)].join(' · ');
+ W.innerHTML=`<div style="display:flex;justify-content:space-between"><h2 style="margin:0">${esc(p.baseToken.symbol)} <span class="sig ${n.sig}"></span>${n.manip?'<span class="ex">!</span>':''}</h2><button onclick="$('#md').style.display='none'">✕</button></div>
+ <div class="sub">${esc(p.baseToken.name)} · ${a}</div><div class="sub">${n.lt?t('long'):t('scalp')} · <span class="g">${t('bull')} ${n.bull}%</span>/<span class="r">${t('bear')} ${100-n.bull}%</span> · ${soc}</div>
+ ${n.copy?`<p class="r"><b>⚠ ${t('copy')}</b></p>`:''}${n.manip?`<p class="o"><b>! ${t('manip')}</b></p>`:''}
+ <canvas id="cv" width="720" height="300"></canvas><div class="note">${t('legend')}</div>
+ <div class="ig">${I(t('dev'),cr?sh(cr):'N/A')}${I(t('made'),dev?dev.n:'N/A')}${I(t('dead'),dev?dev.dead:'N/A',dev&&dev.dead/dev.n>.6?'r':'')}${I(t('ok'),dev?dev.ok:'N/A',dev&&dev.ok?'g':'')}${I(t('rugp'),dev?(dev.dead/dev.n*100).toFixed(0)+'%':'N/A',dev&&dev.dead/dev.n>.6?'r':'')}
+ ${I(t('risk'),ra+'%',ra>60?'r':ra>40?'o':'g')}${I(t('top10'),top10==null?'N/A':top10.toFixed(1)+'%',pc(top10,30,50))}${I(t('bund'),bund==null?'N/A':bund.toFixed(1)+'%',pc(bund,10,20))}${I(t('ins'),ins==null?'N/A':ins.toFixed(1)+'%',pc(ins,15,30))}
+ ${I(t('snip'),sn==null?'N/A':sn+' wallet',sn>5?'r':sn>2?'o':'')}${I(t('phi'),n.phish?'⚠ YA/YES':'OK',n.phish?'r':'g')}${I(t('buys')+'/'+t('sells')+' 24h',n.h24.buys+' / '+n.h24.sells)}${I(t('gfee'),'$'+fm(gfee)+' ('+fee+'%)')}
+ ${I(t('paidl'),paid?'PAID':'UNPAID',paid?'g':'o')}${I(t('liql'),'$'+fm(n.liq))}${I(t('voll')+' 24h','$'+fm(n.v24))}${I(t('mcl'),'$'+fm(n.m))}${I(t('mgl'),n.prog.toFixed(0)+'%')}</div>
+ <div class="pb" style="margin:0"><i style="width:${n.prog}%"></i></div><p class="note">* est = ${lang=='id'?'estimasi heuristik dari data on-chain publik, bukan jaminan. Bukan saran finansial (DYOR).':'heuristic estimate from public on-chain data, not a guarantee. Not financial advice (DYOR).'}</p>
+ <p><a style="color:var(--g)" target="_blank" href="https://pump.fun/coin/${a}">pump.fun</a> · <a style="color:var(--g)" target="_blank" href="${p.url}">DexScreener</a> · <button onclick="$('#s2').value='${Math.round(n.m)}';sim();$('#md').style.display='none';scrollTo(0,0)">→ Sim</button></p>`;
+ draw($('#cv'),cd,mk);render()}
+function draw(cv,cd,mk){const x=cv.getContext('2d'),W=cv.width,H=cv.height;if(!cd.length){x.fillStyle='#888';x.fillText('Chart N/A',10,20);return}
+ const hi=Math.max(...cd.map(c=>c[2])),lo=Math.min(...cd.map(c=>c[3])),w=W/cd.length,Y=v=>H-(v-lo)/(hi-lo||1)*(H-40)-20;
+ cd.forEach((c,i)=>{const u=c[4]>=c[1],cx=i*w+w/2;x.strokeStyle=x.fillStyle=u?'#16c784':'#ea3943';x.beginPath();x.moveTo(cx,Y(c[2]));x.lineTo(cx,Y(c[3]));x.stroke();x.fillRect(i*w+1,Math.min(Y(c[1]),Y(c[4])),w-2,Math.max(1,Math.abs(Y(c[1])-Y(c[4]))))});
+ const col={D:'#f5a524',W:'#4da3ff',S:'#c07bff'};x.font='bold 11px sans-serif';x.textAlign='center';
+ mk.forEach(m=>{let i=-1;cd.forEach((c,k)=>{if(c[0]<=m.ts)i=k});if(i<0)return;const cx=i*w+w/2,b=m.k=='buy';x.fillStyle=col[m.ty];const y=b?Y(cd[i][3])+12:Y(cd[i][2])-6;x.fillText((b?'▲':'▼')+m.ty,cx,y)})}
+function wallets(){const o={};(localStorage.W||'').split('\n').forEach(l=>{const p=l.split(',');if(p[1])o[p[1].trim()]=p[0].trim()});return o}
+function smTab(){$('#list').innerHTML=`<div style="grid-column:1/-1"><p class="note">${t('wl')}</p><textarea id="wt" rows="6" style="width:100%" placeholder="SM:ansem,Wallet...">${esc(localStorage.W||'')}</textarea><br><button onclick="scan()">${t('scan')}</button><div id="smo" style="margin-top:8px"></div></div>`}
+async function scan(){localStorage.W=$('#wt').value;const w=wallets(),agg={},o=$('#smo');o.textContent=t('loading');
+ for(const [ad,lb] of Object.entries(w)){const r=await rpc('getTokenAccountsByOwner',[ad,{programId:'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'},{encoding:'jsonParsed'}]);
+  (r?.value||[]).forEach(x=>{const i=x.account.data.parsed.info;if(i.mint.endsWith('pump')&&+i.tokenAmount.uiAmount>0)(agg[i.mint]=agg[i.mint]||[]).push(lb)});await new Promise(r=>setTimeout(r,400))}
+ const e=Object.entries(agg).sort((a,b)=>b[1].length-a[1].length);
+ o.innerHTML=e.map(([m,l])=>{const c=coins.find(x=>x.a==m);return`<div class="card" style="padding:8px;margin-bottom:6px" onclick="${c?`det('${m}')`:`open('https://dexscreener.com/solana/${m}')`}"><b>${c?esc(c.p.baseToken.symbol):sh(m)}</b> <span class="pill g">${l.length} wallet</span><div class="sub">${l.map(esc).join(', ')}</div></div>`}).join('')||'—'}
+function newsTab(){const l=coins.filter(c=>c.soc.length).sort((a,b)=>(b.boost-a.boost)||(b.p.volume?.h1-a.p.volume?.h1)).slice(0,30);
+ $('#list').innerHTML=`<p class="note" style="grid-column:1/-1">${t('nw')}</p>`+l.map(c=>{const s=c.p.baseToken.symbol,tw=c.soc.find(x=>x.type=='twitter'),tg=c.soc.find(x=>x.type=='telegram');
+  return`<div class="card" style="padding:8px"><b>$${esc(s)}</b> <span class="sig ${c.sig}" style="width:12px;height:12px"></span> <span class="pill">boost ${c.boost}</span><div class="sub">MC $${fm(c.m)} · Vol1h $${fm(c.p.volume?.h1)}</div>
+  <div style="margin-top:6px">${tw?`<a class="pill" target="_blank" href="${esc(tw.url)}">X/Twitter</a>`:''}${tg?`<a class="pill" target="_blank" href="${esc(tg.url)}">Telegram</a>`:''}<a class="pill" target="_blank" href="https://x.com/search?q=%24${encodeURIComponent(s)}&f=live">X $${esc(s)}</a><a class="pill" style="cursor:pointer" onclick="det('${c.a}')">Detail</a></div></div>`}).join('')}
+ui();load();setInterval(()=>{if(tab!='sm'&&tab!='news')load()},45000);
+</script></body></html>
